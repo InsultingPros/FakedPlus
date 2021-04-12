@@ -19,8 +19,6 @@ FakedPlus.Custom
 
 At the moment of 2021.03.27 there are no dependencies.
 
-**EditPackages**
-
 ```cpp
 EditPackages=FakedPlus
 ```

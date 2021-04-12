@@ -7,10 +7,10 @@ var() config int nReservedSlots;
 
 function PostBeginPlay()
 {
-	ReservedPlayerSlots = Clamp(nReservedSlots,1,32);
-	nFakes = Clamp(nConfigFakes,0,20);
+  ReservedPlayerSlots = Clamp(nReservedSlots,1,32);
+  nFakes = Clamp(nConfigFakes,0,20);
 
-	Super.PostBeginPlay();
+  super.PostBeginPlay();
 }
 
 
@@ -40,47 +40,47 @@ function EditConfigFakes(PlayerController pc, string mod)
 
 static function FillPlayInfo(PlayInfo PlayInfo)
 {
-	Super.FillPlayInfo(PlayInfo);
+  super.FillPlayInfo(PlayInfo);
 
-	PlayInfo.AddSetting("Faked Plus", "nReservedSlots", "Reserved Player Slots", 0, 2, "Text", "6;1:32", "", False, False);
-	PlayInfo.AddSetting("Faked Plus", "nConfigFakes", "Faked Players", 0, 2, "Text", "6;1:20", "", False, False);
+  PlayInfo.AddSetting("Faked Plus", "nReservedSlots", "Reserved Player Slots", 0, 2, "Text", "6;1:32", "", False, False);
+  PlayInfo.AddSetting("Faked Plus", "nConfigFakes", "Faked Players", 0, 2, "Text", "6;1:20", "", False, False);
 }
 
 
 static function string GetDescriptionText(string s)
 {
-	switch (s)
-	{
-		case "nConfigFakes":
-			return "Forced Faked Players";
-		case "nReservedSlots":
-			return "Reserved Player Slots";
-	}
+  switch (s)
+  {
+    case "nConfigFakes":
+      return "Forced Faked Players";
+    case "nReservedSlots":
+      return "Reserved Player Slots";
+  }
 
-	return Super.GetDescriptionText(s);
+  return super.GetDescriptionText(s);
 }
 
 
 static function string GetDisplayText(string PropName)
 {
-	switch (PropName)
-	{
-		case "nConfigFakes":
-			return "Forced Faked Players";
-		case "nReservedSlots":
-			return "Reserved Player Slots";
-	}
+  switch (PropName)
+  {
+    case "nConfigFakes":
+      return "Forced Faked Players";
+    case "nReservedSlots":
+      return "Reserved Player Slots";
+  }
 
-	return "Null";
+  return "Null";
 }
 
 
 defaultproperties
 {
-	 FriendlyName="Choosen Amount of Faked Players"
-	 Description="For lulz and >6 fakes."
+  FriendlyName="Choosen Amount of Faked Players"
+  Description="For lulz and >6 fakes."
 
-	 nConfigFakes=6
-	 nReservedSlots=6
-	 bUseReservedSlots=true
+  nConfigFakes=6
+  nReservedSlots=6
+  bUseReservedSlots=true
 }
