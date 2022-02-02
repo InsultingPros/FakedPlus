@@ -1,23 +1,23 @@
-/**
- * Author NikC-
- */
+// Author NikC-
+// https://github.com/InsultingPros/FakedPlus
+
 
 class FakedPlus extends Mutator
   config(FakedPlus)
   abstract;
 
 
-var() config bool bNoDrama;			// slomo switch
-var() config bool bAdminOnly;		// forbid other players to use mutate
-var() config bool bSoloMode;		// leave only 1 free slot
+var() config bool bNoDrama;      // slomo switch
+var() config bool bAdminOnly;    // forbid other players to use mutate
+var() config bool bSoloMode;    // leave only 1 free slot
 
-var() config int minNumPlayers;		// int for zed hp calculation
+var() config int minNumPlayers;    // int for zed hp calculation
 
-var int nFakes;						// main int which controlls fakes amount
-var int ServerSpectatorNum;			// server's spectator slots
+var int nFakes;            // main int which controlls fakes amount
+var int ServerSpectatorNum;      // server's spectator slots
 var int ReservedPlayerSlots;
 
-var bool bLockOn;					// detects server lock (mutate lock on)
+var bool bLockOn;          // detects server lock (mutate lock on)
 var bool bRefreshMaxPlayers;
 var bool bUseReservedSlots;
 
