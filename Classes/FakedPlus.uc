@@ -54,13 +54,12 @@ auto state waitForPlayers
             else
                 KFGT.NumPlayers = nFakes + RealPlayers();
         }
+        // break this and go to global state
         else
-        {
-            // break this state and go to global
             GoToState('');
-        }
     }
 begin:
+    // start the overriden timer until game starts
     SetTimer(1.0, true);
 }
 
