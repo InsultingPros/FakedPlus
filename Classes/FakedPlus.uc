@@ -3,8 +3,8 @@
 
 
 class FakedPlus extends Mutator
-  config(FakedPlus)
-  abstract;
+    config(FakedPlus)
+    abstract;
 
 
 var() config bool bNoDrama;       // slomo switch
@@ -26,15 +26,15 @@ var KFGameType KFGT;
 
 function PostBeginPlay()
 {
-  KFGT = KFGameType(level.game);
-  if (KFGT == none)
-    log(">>> FAKED MUT: KFGameType not found!!!!!!");
+    KFGT = KFGameType(level.game);
+    if (KFGT == none)
+        log(">>> FAKED MUT: KFGameType not found!!!!!!");
 
-  // keep in mind server's spectator count
-  iOriginalSpectators = KFGT.MaxSpectators;
-  // SaveConfig();
+    // keep in mind server's spectator count
+    iOriginalSpectators = KFGT.MaxSpectators;
+    // SaveConfig();
 
-  SetTimer(1.0, true);
+    SetTimer(1.0, true);
 }
 
 
@@ -134,42 +134,42 @@ final private function int AlivePlayersAmount()
 // change zed health, works similar to HP config mut
 function bool CheckReplacement(Actor Other, out byte bSuperRelevant)
 {
-  local KFMonster monster;
-  local int alivePlayersCount;
+    local KFMonster monster;
+    local int alivePlayersCount;
 
-  monster = KFMonster(Other);
-  if (monster != none)
-  {
-    alivePlayersCount = AlivePlayersAmount();
-    if (alivePlayersCount < minNumPlayers)
+    monster = KFMonster(Other);
+    if (monster != none)
     {
-      monster.Health *= hpScale(monster.PlayerCountHealthScale) / monster.NumPlayersHealthModifer();
-      monster.HealthMax = monster.Health;
-      monster.HeadHealth *= hpScale(monster.PlayerNumHeadHealthScale) / monster.NumPlayersHeadHealthModifer();
+        alivePlayersCount = AlivePlayersAmount();
+        if (alivePlayersCount < minNumPlayers)
+        {
+            monster.Health *= hpScale(monster.PlayerCountHealthScale) / monster.NumPlayersHealthModifer();
+            monster.HealthMax = monster.Health;
+            monster.HeadHealth *= hpScale(monster.PlayerNumHeadHealthScale) / monster.NumPlayersHeadHealthModifer();
 
-      monster.MeleeDamage /= 0.75;
-      monster.ScreamDamage /= 0.75;
-      monster.SpinDamConst /= 0.75;
-      monster.SpinDamRand /= 0.75;
+            monster.MeleeDamage /= 0.75;
+            monster.ScreamDamage /= 0.75;
+            monster.SpinDamConst /= 0.75;
+            monster.SpinDamRand /= 0.75;
+        }
     }
-  }
-  return true;
+    return true;
 }
 
 
 final private function float hpScale(float hpScale)
 {
-  return 1.0 + (minNumPlayers - 1) * hpScale;
+    return 1.0 + (minNumPlayers - 1) * hpScale;
 }
 
 
 final private function bool CheckAdmin(PlayerController Sender)
 {
-  if ((Sender.PlayerReplicationInfo != none && Sender.PlayerReplicationInfo.bAdmin) || Level.NetMode == NM_Standalone || Level.NetMode == NM_ListenServer)
-    return true;
+    if ((Sender.PlayerReplicationInfo != none && Sender.PlayerReplicationInfo.bAdmin) || Level.NetMode == NM_Standalone || Level.NetMode == NM_ListenServer)
+        return true;
 
-  SendMessage(Sender, "%wRequires %rADMIN %wprivileges!");
-  return false;
+    SendMessage(Sender, "%wRequires %rADMIN %wprivileges!");
+    return false;
 }
 
 
@@ -425,124 +425,124 @@ function Mutate(string MutateString, PlayerController Sender)
 
 function EditConfigFakes(PlayerController pc, string mod)
 {
-  SendMessage(pc, "%wThis is meant to be used in %rCustom%w mode!");
+    SendMessage(pc, "%wThis is meant to be used in %rCustom%w mode!");
 }
 
 
 function EditConfigSlots(PlayerController pc, string mod)
 {
-  SendMessage(pc, "%wThis is meant to be used in %rCustom%w mode!");
+    SendMessage(pc, "%wThis is meant to be used in %rCustom%w mode!");
 }
 
 //============================== BROADCASTING ==============================
 // SendMessage(pc, "message")
 function SendMessage(PlayerController pc, coerce string message)
 {
-  if (pc == none || message == "")
-    return;
+    if (pc == none || message == "")
+        return;
 
-  // keep WebAdmin clean and shiny
-  if (pc.playerReplicationInfo.PlayerName ~= "WebAdmin" && pc.PlayerReplicationInfo.PlayerID == 0)
-    message = StripFormattedString(message);
-  else
-    message = ParseFormattedLine(message);
+    // keep WebAdmin clean and shiny
+    if (pc.playerReplicationInfo.PlayerName ~= "WebAdmin" && pc.PlayerReplicationInfo.PlayerID == 0)
+        message = StripFormattedString(message);
+    else
+        message = ParseFormattedLine(message);
 
-  pc.teamMessage(none, message, 'FakedPlayers');
+    pc.teamMessage(none, message, 'FakedPlayers');
 }
 
 
 // BroadcastText("something",true/false)
 function BroadcastText(string message, optional bool bSaveToLog)
 {
-  local Controller c;
+    local Controller c;
 
-  for (c = level.controllerList; c != none; c = c.nextController)
-  {
-    if (PlayerController(c) != none)
-      SendMessage(PlayerController(c), message);
-  }
+    for (c = level.controllerList; c != none; c = c.nextController)
+    {
+        if (PlayerController(c) != none)
+            SendMessage(PlayerController(c), message);
+    }
 
-  if (bSaveToLog)
-  {
-    // remove color codes for server log
-    message = StripFormattedString(message);
-    log("FakedPlayers: "$message);
-  }
+    if (bSaveToLog)
+    {
+        // remove color codes for server log
+        message = StripFormattedString(message);
+        log("FakedPlayers: "$message);
+    }
 }
 
 
 // color codes for messages
 static function string ParseFormattedLine(string input)
 {
-  ReplaceText(input, "%r", chr(27) $ chr(200) $ chr(1)   $ chr(1));
-  ReplaceText(input, "%g", chr(27) $ chr(1)   $ chr(200) $ chr(1));
-  ReplaceText(input, "%b", chr(27) $ chr(1)   $ chr(100) $ chr(200));
-  ReplaceText(input, "%w", chr(27) $ chr(200) $ chr(200) $ chr(200));
-  ReplaceText(input, "%y", chr(27) $ chr(200) $ chr(200) $ chr(1));
-  ReplaceText(input, "%p", chr(27) $ chr(200) $ chr(1)   $ chr(200));
+    ReplaceText(input, "%r", chr(27) $ chr(200) $ chr(1)   $ chr(1));
+    ReplaceText(input, "%g", chr(27) $ chr(1)   $ chr(200) $ chr(1));
+    ReplaceText(input, "%b", chr(27) $ chr(1)   $ chr(100) $ chr(200));
+    ReplaceText(input, "%w", chr(27) $ chr(200) $ chr(200) $ chr(200));
+    ReplaceText(input, "%y", chr(27) $ chr(200) $ chr(200) $ chr(1));
+    ReplaceText(input, "%p", chr(27) $ chr(200) $ chr(1)   $ chr(200));
 
-  return input;
+    return input;
 }
 
 
 // remove color codes
 function string StripFormattedString(string input)
 {
-  ReplaceText(input, "%r", "");
-  ReplaceText(input, "%g", "");
-  ReplaceText(input, "%b", "");
-  ReplaceText(input, "%w", "");
-  ReplaceText(input, "%y", "");
-  ReplaceText(input, "%p", "");
+    ReplaceText(input, "%r", "");
+    ReplaceText(input, "%g", "");
+    ReplaceText(input, "%b", "");
+    ReplaceText(input, "%w", "");
+    ReplaceText(input, "%y", "");
+    ReplaceText(input, "%p", "");
 
-  return input;
+    return input;
 }
 
 
 //=========================================================================
 static function FillPlayInfo(PlayInfo PlayInfo)
 {
-  super.FillPlayInfo(PlayInfo);
+    super.FillPlayInfo(PlayInfo);
 
-  PlayInfo.AddSetting("Faked Plus", "bNoDrama", "Disable SloMo", 0, 0, "check");
-  PlayInfo.AddSetting("Faked Plus", "bAdminOnly", "Only Admins can use commands", 0, 0, "check");
-  PlayInfo.AddSetting("Faked Plus", "bSoloMode", "Solo Mode", 0, 0, "check");
-  PlayInfo.AddSetting("Faked Plus", "minNumPlayers", "Mimimal zed health", 0, 1, "Text", "4;0:6", "", False, False);
+    PlayInfo.AddSetting("Faked Plus", "bNoDrama", "Disable SloMo", 0, 0, "check");
+    PlayInfo.AddSetting("Faked Plus", "bAdminOnly", "Only Admins can use commands", 0, 0, "check");
+    PlayInfo.AddSetting("Faked Plus", "bSoloMode", "Solo Mode", 0, 0, "check");
+    PlayInfo.AddSetting("Faked Plus", "minNumPlayers", "Mimimal zed health", 0, 1, "Text", "4;0:6", "", False, False);
 }
 
 
 static function string GetDescriptionText(string SettingName)
 {
-  switch (SettingName)
-  {
-    case "bNoDrama":
-      return "Enable/disable SloMo system";
-    case "bAdminOnly":
-      return "Only Admins can use commands";
-    case "bSoloMode":
-      return "Leaves only 1 avialable player slot";
-    case "minNumPlayers":
-      return "Force minimal health for zeds";
-  }
+    switch (SettingName)
+    {
+        case "bNoDrama":
+            return "Enable/disable SloMo system";
+        case "bAdminOnly":
+            return "Only Admins can use commands";
+        case "bSoloMode":
+            return "Leaves only 1 avialable player slot";
+        case "minNumPlayers":
+            return "Force minimal health for zeds";
+    }
 
-  return super.GetDescriptionText(SettingName);
+    return super.GetDescriptionText(SettingName);
 }
 
 
 //=========================================================================
 defaultproperties
 {
-  GroupName="KF-FakedPlus"
-  FriendlyName="Faked Plus"
-  Description="Simulate extra players for challenge. You can edit faked players amount in the config file."
+    GroupName="KF-FakedPlus"
+    FriendlyName="Faked Plus"
+    Description="Simulate extra players for challenge. You can edit faked players amount in the config file."
 
-  minNumPlayers=1
-  ReservedPlayerSlots=0
-  nFakes=0
-  bSoloMode=false
-  bLockOn=false
-  bNoDrama=false
-  bAdminOnly=true
-  bUseReservedSlots=false
-  bRefreshMaxPlayers=true
+    minNumPlayers=1
+    ReservedPlayerSlots=0
+    nFakes=0
+    bSoloMode=false
+    bLockOn=false
+    bNoDrama=false
+    bAdminOnly=true
+    bUseReservedSlots=false
+    bRefreshMaxPlayers=true
 }
