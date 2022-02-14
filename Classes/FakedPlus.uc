@@ -14,7 +14,7 @@ var() config bool bSoloMode;      // leave only 1 free slot
 var() config int minNumPlayers;   // int for zed hp calculation
 
 var int nFakes;                   // main int which controlls fakes amount
-var int ServerSpectatorNum;       // server's spectator slots
+var int iOriginalSpectators;      // server's spectator slots
 var int ReservedPlayerSlots;
 
 var bool bLockOn;                 // detects server lock (mutate lock on)
@@ -31,7 +31,7 @@ function PostBeginPlay()
     log(">>> FAKED MUT: KFGameType not found!!!!!!");
 
   // keep in mind server's spectator count
-  ServerSpectatorNum = KFGT.MaxSpectators;
+  iOriginalSpectators = KFGT.MaxSpectators;
   // SaveConfig();
 
   SetTimer(1.0, true);
@@ -173,222 +173,253 @@ final private function bool CheckAdmin(PlayerController Sender)
 }
 
 
+function deduceHelp(PlayerController Sender, string arg)
+{
+    local int i;
+    local array<string> arrStrings;
+
+    class'Utility'.static.getHlpStrings(arg, arrStrings);
+    for (i = 0; i < arrStrings.length; i++)
+    {
+        SendMessage(Sender, arrStrings[i]);
+    }
+}
+
+
 function Mutate(string MutateString, PlayerController Sender)
 {
-  local int i,zedHP;
-  local array<String> wordsArray;
-  local String command, mod;
-  local array<String> modArray;
+    local int i, zedHP;
+    local array<String> wordsArray;
+    local String command, mod;
+    local array<String> modArray;
 
-  if (bAdminOnly)
-  {
-    if (!CheckAdmin(Sender))
-      return;
-  }
+    // don't break the chain!
+    super.Mutate(MutateString, Sender);
 
-  else
-  {
-    if (Sender.PlayerReplicationInfo.bOnlySpectator && !CheckAdmin(Sender))
-      return;
-  }
-
-  // ignore empty cmds and dont go further
-  Split(MutateString, " ", wordsArray);
-  if (wordsArray.Length == 0)
-    return;
-
-  // do stuff with our cmd
-  command = wordsArray[0];
-  if (wordsArray.Length > 1)
-    mod = wordsArray[1];
-  else
-    mod = "";
-
-  i = 0;
-  while (i + 1 < wordsArray.Length || i < 10)
-  {
-    if (i + 1 < wordsArray.Length)
-      modArray[i] = wordsArray[i+1];
-    else
-      modArray[i] = "";
-    i ++;
-  }
-
-  // 'mutate hlp'
-  if (command ~= "HELP" || command ~= "HLP" || command ~= "HALP")
-  {
-    // Helper class. Allows to type 'mutate help <cmd>' and get detailed description
-    class'Helper'.static.TellAbout(mod, Sender, Self);
-  }
-
-  // changes fakes amount
-  else if (command ~= "FAKED" || command ~= "FAKE" || command ~= "FAKES")
-  {
-    if (Int(mod) >= 0 && Int(mod) <= 5)
+    // our code
+    if (bAdminOnly)
     {
-      nFakes = Int(mod);
-      if (bLockOn)
-        KFGT.MaxPlayers = RealPlayers() + nFakes;
-      BroadcastText("%wFaked players - %b"$Int(mod), true);
+        if (!CheckAdmin(Sender))
+            return;
     }
-  }
-
-  // change zed health
-  else if(command ~= "HEALTH" || command ~= "HP")
-  {
-    // limit health to 1-6
-    zedHP = Clamp(Int(mod),1,6);
-
-    minNumPlayers = zedHP;
-    BroadcastText("%wZeds minimal health is forced to - %b"$zedHP, true);
-  }
-
-  else if (command ~= "SOLO")
-  {
-    if (mod ~= "ON")
-    {
-      bSoloMode = true;
-      SaveConfig();
-      BroadcastText("%wSolo mode - %b"$mod, true);
-    }
-
-    else if (mod ~= "OFF")
-    {
-      bSoloMode = false;
-      SaveConfig();
-      BroadcastText("%wSolo mode - %b"$mod, true);
-    }
-  }
-
-  // makes player slots equal to player+fakes amount, and prevents other people from joining
-  else if (command ~= "LOCK" || command ~= "PLAYER" || command ~= "PLAYERS" || command ~= "SLOT")
-  {
-    if (mod ~= "ON")
-    {
-      KFGT.MaxPlayers = RealPlayers() + nFakes;
-      bLockOn = true;
-      BroadcastText("%wServer is %rLocked!", true);
-    }
-
-    else if(mod ~= "OFF")
-    {
-      KFGT.MaxPlayers = 6;
-      bLockOn = false;
-      BroadcastText("%wServer is %rUnlocked!", true);
-    }
-
     else
     {
-      KFGT.MaxPlayers = Int(mod);
-      BroadcastText("%wPlayer slots are set to - %b"$Int(mod), true);
-    }
-  }
-
-  // trader skip, doesnt work for actual waves
-  else if (command ~= "SKIP" || command ~= "SKP")
-  {
-    if (!KFGT.bWaveInProgress && KFGT.waveNum <= KFGT.finalWave && KFGT.waveCountDown > 1)
-    {
-      KFGT.waveCountDown = 1;
-      if (InvasionGameReplicationInfo(KFGT.GameReplicationInfo) != none)
-        InvasionGameReplicationInfo(KFGT.GameReplicationInfo).waveNumber = KFGT.waveNum;
-      BroadcastText("%wTrader time skipped!", true);
-    }
-  }
-
-  // prevents spectator joining or sets choosen amount of slots
-  else if (command ~= "SPEC" || command ~= "SPECS" || command ~= "SPECTATOR" || command ~= "SPECTATORS")
-  {
-    if (mod ~= "DEFAULT")
-    {
-      KFGT.MaxSpectators = ServerSpectatorNum;
-      BroadcastText("%wSpectator slots are restored to default!", true);
+        if (Sender.PlayerReplicationInfo.bOnlySpectator && !CheckAdmin(Sender))
+            return;
     }
 
-    else if(mod ~= "OFF")
-    {
-      KFGT.MaxSpectators = 0;
-      BroadcastText("%wSpectator slots are disabled!", true);
-    }
+    // ignore empty cmds and dont go further
+    Split(MutateString, " ", wordsArray);
+    if (wordsArray.Length == 0)
+        return;
 
+    // do stuff with our cmd
+    command = wordsArray[0];
+    if (wordsArray.Length > 1)
+        mod = wordsArray[1];
     else
-    {
-      KFGT.MaxSpectators = Int(mod);
-      BroadcastText("%wSpectator slots are set to - %b"$Int(mod), true);
-    }
-  }
+        mod = "";
 
-  // a switch for slomo
-  else if (command ~= "DRAMA" || command ~= "SLOMO")
-  {
-    if (mod ~= "ON")
+    while (i + 1 < wordsArray.Length || i < 10)
     {
-      bNoDrama = false;
-      BroadcastText("%wSlomo - %b"$mod, true);
+        if (i + 1 < wordsArray.Length)
+        modArray[i] = wordsArray[i+1];
+        else
+        modArray[i] = "";
+        i ++;
     }
 
-    else if (mod ~= "OFF")
+    // 'mutate help <cmd>' and get detailed description
+    if (command ~= "HELP" || command ~= "HLP" || command ~= "HALP")
     {
-      bNoDrama = true;
-      BroadcastText("%wSlomo - %b"$mod, true);
-    }
-  }
-
-  // disallow usual players to use mutate cmds
-  else if (command ~= "ADMINONLY" || command ~= "ADMIN")
-  {
-    if (!CheckAdmin(Sender))
-      return;
-
-    if (mod ~= "ON")
-    {
-      bAdminOnly = true;
-      BroadcastText("%wOnly admins can use commands!", true);
+        deduceHelp(Sender, mod);
+        return;
     }
 
-    else if (mod ~= "OFF")
+    // changes fakes amount
+    else if (command ~= "FAKED" || command ~= "FAKE" || command ~= "FAKES")
     {
-      bAdminOnly = false;
-      BroadcastText("%wAll players can use commands!", true);
+        if (Int(mod) >= 0 && Int(mod) <= 5)
+        {
+            nFakes = Int(mod);
+            if (bLockOn)
+                KFGT.MaxPlayers = RealPlayers() + nFakes;
+            BroadcastText("%wFaked players - %b"$Int(mod), true);
+        }
+        return;
     }
-  }
 
-  // save all changed stuff, since all other cmds dont touch the config
-  else if (command ~= "SAVE")
-  {
-    if (!CheckAdmin(Sender))
-      return;
+    // change zed health
+    else if(command ~= "HEALTH" || command ~= "HP")
+    {
+        // limit health to 1-6
+        zedHP = Clamp(Int(mod),1,6);
 
-    SaveConfig();
-    SendMessage(Sender, "%rConfig is saved!");
-  }
+        minNumPlayers = zedHP;
+        BroadcastText("%wZeds minimal health is forced to - %b"$zedHP, true);
+        return;
+    }
 
-  else if (command ~= "STATUS")
-  {
-    SendMessage(Sender, "%rFaked Plus Mutator");
-    SendMessage(Sender, "%wFakes - %b"$nFakes$"%w, Real Players - %b"$RealPlayers()$"%w, Player Slots - %b"$KFGT.MaxPlayers);
-    SendMessage(Sender, "%wZeds Minimal Health - %b"$minNumPlayers);
-    SendMessage(Sender, "%wSlomo disabled - %r"$bNoDrama$"%w, AdminOnly - %r"$bAdminOnly$"%w, SoloMode - %r"$bSoloMode);
-    SendMessage(Sender, "%wDefault Spectator Slots - %b"$ServerSpectatorNum$"%w, Current Spectator Slots - %b"$KFGT.MaxSpectators);
-  }
+    else if (command ~= "SOLO")
+    {
+        if (mod ~= "ON")
+        {
+            bSoloMode = true;
+            SaveConfig();
+            BroadcastText("%wSolo mode - %b"$mod, true);
+        }
 
-  // why not?
-  else if (command ~= "CREDITS")
-  {
-    SendMessage(Sender, "%wAuthor %bNikC-%w. Special thanks to %bdkanus%w, %ba1eat0r%w, %bbIbIbI(rus)%w, %bscary ghost%w, %bPoosh%w.");
-  }
+        else if (mod ~= "OFF")
+        {
+            bSoloMode = false;
+            SaveConfig();
+            BroadcastText("%wSolo mode - %b"$mod, true);
+        }
 
-  else if (command ~= "ReservedSlots" || command ~= "rs")
-  {
-    EditConfigSlots(Sender, mod);
-  }
+        return;
+    }
 
-  else if (command ~= "ConfigFakes" || command ~= "cf")
-  {
-    EditConfigFakes(Sender, mod);
-  }
+    // makes player slots equal to player+fakes amount, and prevents other people from joining
+    else if (command ~= "LOCK" || command ~= "PLAYER" || command ~= "PLAYERS" || command ~= "SLOT")
+    {
+        if (mod ~= "ON")
+        {
+            KFGT.MaxPlayers = RealPlayers() + nFakes;
+            bLockOn = true;
+            BroadcastText("%wServer is %rLocked!", true);
+        }
 
-  super.Mutate(MutateString, Sender);
+        else if (mod ~= "OFF")
+        {
+            KFGT.MaxPlayers = 6;
+            bLockOn = false;
+            BroadcastText("%wServer is %rUnlocked!", true);
+        }
+
+        else
+        {
+            KFGT.MaxPlayers = Int(mod);
+            BroadcastText("%wPlayer slots are set to - %b"$Int(mod), true);
+        }
+
+        return;
+    }
+
+    // trader skip, doesnt work for actual waves
+    else if (command ~= "SKIP" || command ~= "SKP")
+    {
+        if (!KFGT.bWaveInProgress && KFGT.waveNum <= KFGT.finalWave && KFGT.waveCountDown > 1)
+        {
+            KFGT.waveCountDown = 1;
+            if (InvasionGameReplicationInfo(KFGT.GameReplicationInfo) != none)
+                InvasionGameReplicationInfo(KFGT.GameReplicationInfo).waveNumber = KFGT.waveNum;
+            BroadcastText("%wTrader time skipped!", true);
+        }
+        return;
+    }
+
+    // prevents spectator joining or sets choosen amount of slots
+    else if (command ~= "SPEC" || command ~= "SPECS" || command ~= "SPECTATOR" || command ~= "SPECTATORS")
+    {
+        if (mod ~= "DEFAULT")
+        {
+            KFGT.MaxSpectators = iOriginalSpectators;
+            BroadcastText("%wSpectator slots are restored to default!", true);
+        }
+
+        else if (mod ~= "OFF")
+        {
+            KFGT.MaxSpectators = 0;
+            BroadcastText("%wSpectator slots are disabled!", true);
+        }
+
+        else
+        {
+            KFGT.MaxSpectators = Int(mod);
+            BroadcastText("%wSpectator slots are set to - %b"$Int(mod), true);
+        }
+
+        return;
+    }
+
+    // a switch for slomo
+    else if (command ~= "DRAMA" || command ~= "SLOMO")
+    {
+        if (mod ~= "ON")
+        {
+            bNoDrama = false;
+            BroadcastText("%wSlomo - %b"$mod, true);
+        }
+
+        else if (mod ~= "OFF")
+        {
+            bNoDrama = true;
+            BroadcastText("%wSlomo - %b"$mod, true);
+        }
+
+        return;
+    }
+
+    // disallow usual players to use mutate cmds
+    else if (command ~= "ADMINONLY" || command ~= "ADMIN")
+    {
+        if (!CheckAdmin(Sender))
+            return;
+
+        if (mod ~= "ON")
+        {
+            bAdminOnly = true;
+            BroadcastText("%wOnly admins can use commands!", true);
+        }
+
+        else if (mod ~= "OFF")
+        {
+            bAdminOnly = false;
+            BroadcastText("%wAll players can use commands!", true);
+        }
+
+        return;
+    }
+
+    // save all changed stuff, since all other cmds dont touch the config
+    else if (command ~= "SAVE")
+    {
+        if (!CheckAdmin(Sender))
+            return;
+
+        SaveConfig();
+        SendMessage(Sender, "%rConfig is saved!");
+        return;
+    }
+
+    else if (command ~= "STATUS")
+    {
+        SendMessage(Sender, "%rFaked Plus Mutator");
+        SendMessage(Sender, "%wFakes - %b"$nFakes$"%w, Real Players - %b"$RealPlayers()$"%w, Player Slots - %b"$KFGT.MaxPlayers);
+        SendMessage(Sender, "%wZeds Minimal Health - %b"$minNumPlayers);
+        SendMessage(Sender, "%wSlomo disabled - %r"$bNoDrama$"%w, AdminOnly - %r"$bAdminOnly$"%w, SoloMode - %r"$bSoloMode);
+        SendMessage(Sender, "%wDefault Spectator Slots - %b"$iOriginalSpectators$"%w, Current Spectator Slots - %b"$KFGT.MaxSpectators);
+        return;
+    }
+
+    // why not?
+    else if (command ~= "CREDITS")
+    {
+        SendMessage(Sender, "%wAuthor %bNikC-%w. Special thanks to %bdkanus%w, %ba1eat0r%w, %bbIbIbI(rus)%w, %bscary ghost%w, %bPoosh%w.");
+        return;
+    }
+
+    else if (command ~= "ReservedSlots" || command ~= "rs")
+    {
+        EditConfigSlots(Sender, mod);
+        return;
+    }
+
+    else if (command ~= "ConfigFakes" || command ~= "cf")
+    {
+        EditConfigFakes(Sender, mod);
+        return;
+    }
 }
 
 
