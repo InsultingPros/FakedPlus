@@ -26,106 +26,108 @@ var KFGameType KFGT;
 
 function PostBeginPlay()
 {
-  local bool bInitialized;
-
-  if (bInitialized)
-    return;
-  bInitialized = true;
-
   KFGT = KFGameType(level.game);
   if (KFGT == none)
-  {
-    Log("KFGameType not found!!!!!!");
-  }
+    log(">>> FAKED MUT: KFGameType not found!!!!!!");
 
   // keep in mind server's spectator count
   ServerSpectatorNum = KFGT.MaxSpectators;
   // SaveConfig();
 
-  SetTimer(1.0,true);
+  SetTimer(1.0, true);
+}
+
+
+// my OCD doesnt like when empty servers are on top of the server browser
+auto state waitForPlayers
+{
+    event Timer()
+    {
+        // if in lobby state
+        if (KFGT.IsInState('PendingMatch'))
+        {
+            // if no real players, add nothing
+            if (RealPlayers() == 0)
+                KFGT.NumPlayers = 0;
+            // if any player join, add all fakes
+            else
+                KFGT.NumPlayers = nFakes + RealPlayers();
+        }
+        else
+        {
+            // break this state and go to global
+            GoToState('');
+        }
+    }
+begin:
+    SetTimer(1.0, true);
 }
 
 
 function Timer()
 {
-  // controll over slomo
-  if (bNoDrama)
-    KFGT.LastZedTimeEvent = Level.TimeSeconds;
+    // controll over slomo
+    if (bNoDrama)
+        KFGT.LastZedTimeEvent = Level.TimeSeconds;
 
-  // apply bSoloMode or custom slot settings
-  if (bRefreshMaxPlayers)
-    AdjustPlayerSlots();
+    // apply bSoloMode or custom slot settings
+    if (bRefreshMaxPlayers)
+        AdjustPlayerSlots();
 
-  // my OCD doesnt like when empty servers are on top of the list
-  if (KFGT.IsInState('PendingMatch'))
-  {
-    if (RealPlayers() == 0)
+    if (KFGT.IsInState('MatchInProgress'))
     {
-      KFGT.NumPlayers = 0;
-      return;
+        KFGT.NumPlayers = nFakes + RealPlayers();
+        return;
     }
 
-    else
+    // do this to make map voting less painfull and instant after we wipe
+    else if (KFGT.IsInState('MatchOver'))
     {
-      KFGT.NumPlayers = nFakes + RealPlayers();
-      return;
+        KFGT.NumPlayers = RealPlayers();
     }
-  }
-
-  else if (KFGT.IsInState('MatchInProgress'))
-  {
-    KFGT.NumPlayers = nFakes + RealPlayers();
-    return;
-  }
-
-  // do this to make map voting less painfull and instant after we wipe
-  else if (KFGT.IsInState('MatchOver'))
-  {
-    KFGT.NumPlayers = RealPlayers();
-  }
 }
 
 
 function AdjustPlayerSlots()
 {
-  bRefreshMaxPlayers = false;
+    bRefreshMaxPlayers = false;
 
-  if (bSoloMode)
-  {
-    KFGT.MaxPlayers = nFakes + 1;
-    return;
-  }
+    if (bSoloMode)
+    {
+        KFGT.MaxPlayers = nFakes + 1;
+        return;
+    }
 
-  if (bUseReservedSlots)
-    KFGT.MaxPlayers = nFakes + ReservedPlayerSlots;
+    if (bUseReservedSlots)
+        KFGT.MaxPlayers = nFakes + ReservedPlayerSlots;
 }
 
 
 // count non-spectator players
-function int RealPlayers()
+final private function int RealPlayers()
 {
-  local Controller c;
-  local int realPlayersCount;
+    local Controller c;
+    local int realPlayersCount;
 
-  for (c = Level.ControllerList; c != none; c = c.NextController)
-    if (c.IsA('PlayerController') && c.PlayerReplicationInfo != none && !c.PlayerReplicationInfo.bOnlySpectator)
-      realPlayersCount++;
+    for (c = Level.ControllerList; c != none; c = c.NextController)
+        if (c.IsA('PlayerController') && c.PlayerReplicationInfo != none && !c.PlayerReplicationInfo.bOnlySpectator)
+            realPlayersCount++;
 
-  return realPlayersCount;
+    return realPlayersCount;
 }
 
 
 // count currently alive players
-function int AlivePlayersAmount()
+final private function int AlivePlayersAmount()
 {
-  local Controller c;
-  local int alivePlayersCount;
+    local Controller c;
+    local int alivePlayersCount;
 
-  for (c = Level.ControllerList; c != none; c = c.NextController)
-    if (c.IsA('PlayerController') && c.Pawn != none && c.Pawn.Health > 0)
-      alivePlayersCount ++;
+    for (c = Level.ControllerList; c != none; c = c.NextController)
+        if (c.IsA('PlayerController') && c.Pawn != none && c.Pawn.Health > 0)
+            alivePlayersCount ++;
 
-  return alivePlayersCount;
+    return alivePlayersCount;
 }
 
 
@@ -155,13 +157,13 @@ function bool CheckReplacement(Actor Other, out byte bSuperRelevant)
 }
 
 
-function float hpScale(float hpScale)
+final private function float hpScale(float hpScale)
 {
   return 1.0 + (minNumPlayers - 1) * hpScale;
 }
 
 
-function bool CheckAdmin(PlayerController Sender)
+final private function bool CheckAdmin(PlayerController Sender)
 {
   if ((Sender.PlayerReplicationInfo != none && Sender.PlayerReplicationInfo.bAdmin) || Level.NetMode == NM_Standalone || Level.NetMode == NM_ListenServer)
     return true;
@@ -441,12 +443,12 @@ function BroadcastText(string message, optional bool bSaveToLog)
 // color codes for messages
 static function string ParseFormattedLine(string input)
 {
-  ReplaceText(input, "%r", chr(27)$chr(200)$chr(1)$chr(1));
-  ReplaceText(input, "%g", chr(27)$chr(1)$chr(200)$chr(1));
-  ReplaceText(input, "%b", chr(27)$chr(1)$chr(100)$chr(200));
-  ReplaceText(input, "%w", chr(27)$chr(200)$chr(200)$chr(200));
-  ReplaceText(input, "%y", chr(27)$chr(200)$chr(200)$chr(1));
-  ReplaceText(input, "%p", chr(27)$chr(200)$chr(1)$chr(200));
+  ReplaceText(input, "%r", chr(27) $ chr(200) $ chr(1)   $ chr(1));
+  ReplaceText(input, "%g", chr(27) $ chr(1)   $ chr(200) $ chr(1));
+  ReplaceText(input, "%b", chr(27) $ chr(1)   $ chr(100) $ chr(200));
+  ReplaceText(input, "%w", chr(27) $ chr(200) $ chr(200) $ chr(200));
+  ReplaceText(input, "%y", chr(27) $ chr(200) $ chr(200) $ chr(1));
+  ReplaceText(input, "%p", chr(27) $ chr(200) $ chr(1)   $ chr(200));
 
   return input;
 }
