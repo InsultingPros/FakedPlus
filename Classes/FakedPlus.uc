@@ -41,6 +41,7 @@ function PostBeginPlay()
 // my OCD doesnt like when empty servers are on top of the server browser
 auto state waitForPlayers
 {
+    // state timer, overrides global
     event Timer()
     {
         // if in lobby state
@@ -64,6 +65,7 @@ begin:
 }
 
 
+// global timer
 function Timer()
 {
     // controll over slomo
@@ -163,13 +165,35 @@ final private function float hpScale(float hpScale)
 }
 
 
-final private function bool CheckAdmin(PlayerController Sender)
+final private function bool bAllowExec(PlayerController Sender)
 {
-    if ((Sender.PlayerReplicationInfo != none && Sender.PlayerReplicationInfo.bAdmin) || Level.NetMode == NM_Standalone || Level.NetMode == NM_ListenServer)
+    local PlayerReplicationInfo pri;
+
+    // if we are adimn, we are golden
+    if (bAllowAdminsOnly(Sender))
         return true;
 
-    SendMessage(Sender, "%wRequires %rADMIN %wprivileges!");
-    return false;
+    pri = Sender.PlayerReplicationInfo;
+
+    // no pri OR usual player in specs, commands NOT allowed 
+    if (pri == none || (!pri.bAdmin && (pri.bOnlySpectator || bAdminOnly)))
+        return false;
+
+    // logged in admin OR usual player while not being a spec, commands allowed for everyone
+    else if (pri.bAdmin || (!pri.bAdmin && !pri.bOnlySpectator && !bAdminOnly))
+        return true;
+
+    // fallback
+    else
+        return false;
+}
+
+
+final private function bool bAllowAdminsOnly(PlayerController Sender)
+{
+    // listened server, solo support + logged in admin
+    return (Level.NetMode == NM_Standalone || Level.NetMode == NM_ListenServer)
+            || (Sender.PlayerReplicationInfo != none && Sender.PlayerReplicationInfo.bAdmin);
 }
 
 
@@ -196,16 +220,12 @@ function Mutate(string MutateString, PlayerController Sender)
     // don't break the chain!
     super.Mutate(MutateString, Sender);
 
-    // our code
-    if (bAdminOnly)
+    // start our code
+    // at first check if we can execute any command
+    if (!bAllowExec(Sender))
     {
-        if (!CheckAdmin(Sender))
-            return;
-    }
-    else
-    {
-        if (Sender.PlayerReplicationInfo.bOnlySpectator && !CheckAdmin(Sender))
-            return;
+        SendMessage(Sender, "%bFAKED PLUS: %wmutate commands require %rADMIN %wprivileges!");
+        return;
     }
 
     // ignore empty cmds and dont go further
@@ -363,8 +383,11 @@ function Mutate(string MutateString, PlayerController Sender)
     // disallow usual players to use mutate cmds
     else if (command ~= "ADMINONLY" || command ~= "ADMIN")
     {
-        if (!CheckAdmin(Sender))
+        if (!bAllowAdminsOnly(Sender))
+        {
+            SendMessage(Sender, "%bFAKED PLUS: %wthis command require %rADMIN %wprivileges!");
             return;
+        }
 
         if (mod ~= "ON")
         {
@@ -384,8 +407,11 @@ function Mutate(string MutateString, PlayerController Sender)
     // save all changed stuff, since all other cmds dont touch the config
     else if (command ~= "SAVE")
     {
-        if (!CheckAdmin(Sender))
+        if (!bAllowAdminsOnly(Sender))
+        {
+            SendMessage(Sender, "%bFAKED PLUS: %wthis command require %rADMIN %wprivileges!");
             return;
+        }
 
         SaveConfig();
         SendMessage(Sender, "%rConfig is saved!");
