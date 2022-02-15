@@ -150,7 +150,6 @@ function bool CheckReplacement(Actor Other, out byte bSuperRelevant)
     local KFMonster monster;
     local int alivePlayersCount;
 
-    // FIXME pls ;_;
     // if (KFMonster(Other) != none)
     // {
     //     monster = KFMonster(Other);
@@ -166,9 +165,11 @@ function bool CheckReplacement(Actor Other, out byte bSuperRelevant)
     //         }
     //     }
     // }
-    return super.CheckReplacement(Other, bSuperRelevant);
 
-
+    // FIXME pls ;_;
+    if (KFMonster(Other) != none)
+    {
+        monster = KFMonster(Other);
         alivePlayersCount = intAlivePlayers();
         if (alivePlayersCount < minNumPlayers)
         {
@@ -181,6 +182,9 @@ function bool CheckReplacement(Actor Other, out byte bSuperRelevant)
             monster.SpinDamConst /= 0.75;
             monster.SpinDamRand /= 0.75;
         }
+    }
+
+    return super.CheckReplacement(Other, bSuperRelevant);
 }
 
 

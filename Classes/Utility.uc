@@ -4,8 +4,6 @@ class Utility extends object
 
 const lineSeparator="%w=============================";
 const spaces16="                ";
-const spaces48="                                                ";
-// SendMessage(Sender, spaces16 $ );
 
 // mutate help related stuff
 final static function array<string> getHlpStrings(string arg, out array<string> str)
