@@ -14,7 +14,6 @@ var() config bool bSoloMode;      // leave only 1 free slot
 var() config int minNumPlayers;   // int for zed hp calculation
 
 var int nFakes;                   // main int which controlls fakes amount
-var int iOriginalSpectators;      // server's spectator slots
 var int ReservedPlayerSlots;
 
 var bool bLockOn;                 // detects server lock (mutate lock on)
@@ -22,8 +21,13 @@ var bool bRefreshMaxPlayers;
 var bool bUseReservedSlots;
 
 var KFGameType KFGT;
+
+var int iOriginalSpectators;      // server's spectator slots
+var int iOriginalPlayerSlots;     // server's player slots, in case of increased numbers
+
 const lineSeparator="%w=============================";
 const spaces16="                ";
+const logMyName=">>> FAKED PLUS: ";
 
 
 function PostBeginPlay()
@@ -33,13 +37,14 @@ function PostBeginPlay()
     // since most of our code works with it
     if (KFGT == none)
     {
-        log(">>> FAKED MUT: KFGameType not found. TERMINATING!");
+        log(logMyName $ "KFGameType not found. TERMINATING!");
         Destroy();
         return;
     }
 
     // keep in mind server's spectator count
     iOriginalSpectators = KFGT.MaxSpectators;
+    iOriginalPlayerSlots = KFGT.MaxPlayers;
 
     SetTimer(1.0, true);
 }
@@ -230,6 +235,22 @@ function deduceHelp(PlayerController Sender, string arg)
 }
 
 
+final private function string getSenderName(PlayerController Sender)
+{
+    local PlayerReplicationInfo pri;
+    local string s;
+
+    pri = Sender.PlayerReplicationInfo;
+
+    if (pri == none)
+        s = "Someone";
+    else
+        s = pri.PlayerName;
+
+    return "%w[%b" $ s $ " %wexecuted] ";
+}
+
+
 function Mutate(string MutateString, PlayerController Sender)
 {
     local int i, zedHP;
@@ -284,7 +305,7 @@ function Mutate(string MutateString, PlayerController Sender)
             nFakes = Int(mod);
             if (bLockOn)
                 KFGT.MaxPlayers = intRealPlayers() + nFakes;
-            BroadcastText("%wFaked players - %b"$Int(mod), true);
+            BroadcastText(getSenderName(Sender) $ "%wFaked players - %b"$Int(mod), true);
         }
         return;
     }
@@ -296,7 +317,7 @@ function Mutate(string MutateString, PlayerController Sender)
         zedHP = Clamp(Int(mod),1,6);
 
         minNumPlayers = zedHP;
-        BroadcastText("%wZeds minimal health is forced to - %b"$zedHP, true);
+        BroadcastText(getSenderName(Sender) $ "%wZeds minimal health is forced to - %b"$zedHP, true);
         return;
     }
 
@@ -306,14 +327,14 @@ function Mutate(string MutateString, PlayerController Sender)
         {
             bSoloMode = true;
             SaveConfig();
-            BroadcastText("%wSolo mode - %b"$mod, true);
+            BroadcastText(getSenderName(Sender) $ "%wSolo mode - %b"$mod, true);
         }
 
         else if (mod ~= "OFF")
         {
             bSoloMode = false;
             SaveConfig();
-            BroadcastText("%wSolo mode - %b"$mod, true);
+            BroadcastText(getSenderName(Sender) $ "%wSolo mode - %b"$mod, true);
         }
 
         return;
@@ -326,20 +347,20 @@ function Mutate(string MutateString, PlayerController Sender)
         {
             KFGT.MaxPlayers = intRealPlayers() + nFakes;
             bLockOn = true;
-            BroadcastText("%wServer is %rLocked!", true);
+            BroadcastText(getSenderName(Sender) $ "%wServer is %rLocked!", true);
         }
 
         else if (mod ~= "OFF")
         {
-            KFGT.MaxPlayers = 6;
+            KFGT.MaxPlayers = iOriginalPlayerSlots;
             bLockOn = false;
-            BroadcastText("%wServer is %rUnlocked!", true);
+            BroadcastText(getSenderName(Sender) $ "%wServer is %rUnlocked!", true);
         }
 
         else
         {
             KFGT.MaxPlayers = Int(mod);
-            BroadcastText("%wPlayer slots are set to - %b"$Int(mod), true);
+            BroadcastText(getSenderName(Sender) $ "%wPlayer slots are set to - %b"$Int(mod), true);
         }
 
         return;
@@ -353,7 +374,7 @@ function Mutate(string MutateString, PlayerController Sender)
             KFGT.waveCountDown = 1;
             if (InvasionGameReplicationInfo(KFGT.GameReplicationInfo) != none)
                 InvasionGameReplicationInfo(KFGT.GameReplicationInfo).waveNumber = KFGT.waveNum;
-            BroadcastText("%wTrader time skipped!", true);
+            BroadcastText(getSenderName(Sender) $ "%wTrader time skipped!", true);
         }
         return;
     }
@@ -364,19 +385,19 @@ function Mutate(string MutateString, PlayerController Sender)
         if (mod ~= "DEFAULT")
         {
             KFGT.MaxSpectators = iOriginalSpectators;
-            BroadcastText("%wSpectator slots are restored to default!", true);
+            BroadcastText(getSenderName(Sender) $ "%wSpectator slots are restored to default!", true);
         }
 
         else if (mod ~= "OFF")
         {
             KFGT.MaxSpectators = 0;
-            BroadcastText("%wSpectator slots are disabled!", true);
+            BroadcastText(getSenderName(Sender) $ "%wSpectator slots are disabled!", true);
         }
 
         else
         {
             KFGT.MaxSpectators = Int(mod);
-            BroadcastText("%wSpectator slots are set to - %b"$Int(mod), true);
+            BroadcastText(getSenderName(Sender) $ "%wSpectator slots are set to - %b"$Int(mod), true);
         }
 
         return;
@@ -388,13 +409,13 @@ function Mutate(string MutateString, PlayerController Sender)
         if (mod ~= "ON")
         {
             bNoDrama = false;
-            BroadcastText("%wSlomo - %b"$mod, true);
+            BroadcastText(getSenderName(Sender) $ "%wSlomo - %b"$mod, true);
         }
 
         else if (mod ~= "OFF")
         {
             bNoDrama = true;
-            BroadcastText("%wSlomo - %b"$mod, true);
+            BroadcastText(getSenderName(Sender) $ "%wSlomo - %b"$mod, true);
         }
 
         return;
@@ -412,13 +433,13 @@ function Mutate(string MutateString, PlayerController Sender)
         if (mod ~= "ON")
         {
             bAdminOnly = true;
-            BroadcastText("%wOnly admins can use commands!", true);
+            BroadcastText(getSenderName(Sender) $ "%wOnly admins can use commands!", true);
         }
 
         else if (mod ~= "OFF")
         {
             bAdminOnly = false;
-            BroadcastText("%wAll players can use commands!", true);
+            BroadcastText(getSenderName(Sender) $ "%wAll players can use commands!", true);
         }
 
         return;
@@ -491,7 +512,7 @@ function EditConfigSlots(PlayerController pc, string mod)
 }
 
 //============================== BROADCASTING ==============================
-// SendMessage(pc, "message")
+// send message to exact player
 function SendMessage(PlayerController pc, coerce string message)
 {
     if (pc == none || message == "")
@@ -508,7 +529,7 @@ function SendMessage(PlayerController pc, coerce string message)
 }
 
 
-// BroadcastText("something",true/false)
+// send message to everyone and save to server log file
 function BroadcastText(string message, optional bool bSaveToLog)
 {
     local Controller c;
@@ -523,7 +544,7 @@ function BroadcastText(string message, optional bool bSaveToLog)
     {
         // remove color codes for server log
         message = StripFormattedString(message);
-        log("FakedPlayers: "$message);
+        log(logMyName $ message);
     }
 }
 
