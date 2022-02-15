@@ -30,6 +30,7 @@ function PostBeginPlay()
 {
     KFGT = KFGameType(level.game);
     // shut down if we can't find KFGameType!
+    // since most of our code works with it
     if (KFGT == none)
     {
         log(">>> FAKED MUT: KFGameType not found. TERMINATING!");
@@ -39,7 +40,6 @@ function PostBeginPlay()
 
     // keep in mind server's spectator count
     iOriginalSpectators = KFGT.MaxSpectators;
-    // SaveConfig();
 
     SetTimer(1.0, true);
 }
@@ -145,6 +145,7 @@ function bool CheckReplacement(Actor Other, out byte bSuperRelevant)
     local KFMonster monster;
     local int alivePlayersCount;
 
+    // FIXME pls ;_;
     // if (KFMonster(Other) != none)
     // {
     //     monster = KFMonster(Other);
@@ -496,9 +497,10 @@ function SendMessage(PlayerController pc, coerce string message)
     if (pc == none || message == "")
         return;
 
-    // keep WebAdmin clean and shiny
+    // clear all tags for WebAdmin
     if (pc.playerReplicationInfo.PlayerName ~= "WebAdmin" && pc.PlayerReplicationInfo.PlayerID == 0)
         message = StripFormattedString(message);
+    // color me for usual player controllers
     else
         message = ParseFormattedLine(message);
 
@@ -513,7 +515,7 @@ function BroadcastText(string message, optional bool bSaveToLog)
 
     for (c = level.controllerList; c != none; c = c.nextController)
     {
-        if (PlayerController(c) != none)
+        if (c.IsA('PlayerController'))
             SendMessage(PlayerController(c), message);
     }
 
