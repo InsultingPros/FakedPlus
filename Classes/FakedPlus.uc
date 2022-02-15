@@ -27,8 +27,13 @@ var KFGameType KFGT;
 function PostBeginPlay()
 {
     KFGT = KFGameType(level.game);
+    // shut down if we can't find KFGameType!
     if (KFGT == none)
-        log(">>> FAKED MUT: KFGameType not found!!!!!!");
+    {
+        log(">>> FAKED MUT: KFGameType not found. TERMINATING!");
+        Destroy();
+        return;
+    }
 
     // keep in mind server's spectator count
     iOriginalSpectators = KFGT.MaxSpectators;
