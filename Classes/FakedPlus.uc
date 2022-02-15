@@ -459,7 +459,8 @@ function Mutate(string MutateString, PlayerController Sender)
     // why not?
     else if (command ~= "CREDITS")
     {
-        SendMessage(Sender, "%wAuthor %bNikC-%w. Special thanks to %bdkanus%w, %ba1eat0r%w, %bbIbIbI(rus)%w, %bscary ghost%w, %bPoosh%w.");
+        SendMessage(Sender, "%wAuthor %bNikC-%w.");
+        SendMessage(Sender, "%wSpecial thanks to %bdkanus%w, %ba1eat0r%w, %bbIbIbI(rus)%w, %bscary ghost%w, %bPoosh%w.");
         return;
     }
 
