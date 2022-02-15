@@ -2,18 +2,25 @@ class Utility extends object
     abstract;
 
 
+const lineSeparator="%w=============================";
+const spaces16="                ";
+const spaces48="                                                ";
+// SendMessage(Sender, spaces16 $ );
+
 // mutate help related stuff
 final static function array<string> getHlpStrings(string arg, out array<string> str)
 {
     if (arg == "")
     {
-        str[str.Length] = "%rFaked Plus Mutator";
-        str[str.Length] = "%wCommands that have ON / OFF switch: %gLOCK%w, %gSPEC%w, %gDRAMA%w,";
-        str[str.Length] = "%gADMINONLY%w, %gSOLO%w.";
-        str[str.Length] = "%wCommands that require int values: %gFAKED%w, %gHEALTH%w, %gSPEC%w,";
-        str[str.Length] = "%gReservedSlots%w, %gConfigFakes%w.";
-        str[str.Length] = "%wCommands that work as is: %gSKIP%w, %gSAVE%w, %gCREDITS%w, %gSTATUS%w.";
-        str[str.Length] = "%wIf you want to know what command does what type '%gmutate help <cmd>%w'.";
+        // make it more readable and fancy!
+        str[str.Length] = lineSeparator;
+        str[str.Length] = spaces16 $ "%rFAKED PLUS HELPER";
+        str[str.Length] = lineSeparator;
+        str[str.Length] = "%w  Commands with ON / OFF switch: %gLOCK%w, %gSPEC%w, %gDRAMA%w, %gADMINONLY%w, %gSOLO%w.";
+        str[str.Length] = "%w  Commands with int values: %gFAKED%w, %gHEALTH%w, %gSPEC%w,%gReservedSlots%w, %gConfigFakes%w.";
+        str[str.Length] = "%w  Commands that work as is: %gSKIP%w, %gSAVE%w, %gCREDITS%w, %gSTATUS%w.";
+        str[str.Length] = "%w  If you want to know what command does what - type '%gmutate help <cmd>%w'.";
+        str[str.Length] = lineSeparator;
         return str;
     }
 
