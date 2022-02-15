@@ -22,6 +22,8 @@ var bool bRefreshMaxPlayers;
 var bool bUseReservedSlots;
 
 var KFGameType KFGT;
+const lineSeparator="%w=============================";
+const spaces16="                ";
 
 
 function PostBeginPlay()
@@ -435,13 +437,22 @@ function Mutate(string MutateString, PlayerController Sender)
         return;
     }
 
-    else if (command ~= "STATUS")
+    else if (command ~= "STATUS" || command ~= "SETTINGS")
     {
-        SendMessage(Sender, "%rFaked Plus Mutator");
-        SendMessage(Sender, "%wFakes - %b"$nFakes$"%w, Real Players - %b"$intRealPlayers()$"%w, Player Slots - %b"$KFGT.MaxPlayers);
-        SendMessage(Sender, "%wZeds Minimal Health - %b"$minNumPlayers);
-        SendMessage(Sender, "%wSlomo disabled - %r"$bNoDrama$"%w, AdminOnly - %r"$bAdminOnly$"%w, SoloMode - %r"$bSoloMode);
-        SendMessage(Sender, "%wDefault Spectator Slots - %b"$iOriginalSpectators$"%w, Current Spectator Slots - %b"$KFGT.MaxSpectators);
+        // make it as readable as posible
+        SendMessage(Sender, lineSeparator);
+        SendMessage(Sender, spaces16 $ "%rFAKED PLUS SETTINGS");
+        SendMessage(Sender, lineSeparator);
+        SendMessage(Sender, "%w  Fakes - %b " $ nFakes);
+        SendMessage(Sender, "%w  Real Players - %b" $ intRealPlayers());
+        SendMessage(Sender, "%w  Player Slots - %b" $ KFGT.MaxPlayers);
+        SendMessage(Sender, "%w  Zeds Minimal Health - %b" $ minNumPlayers);
+        SendMessage(Sender, "%w  Slomo disabled - %r" $ bNoDrama);
+        SendMessage(Sender, "%w  AdminOnly - %r" $ bAdminOnly);
+        SendMessage(Sender, "%w  SoloMode - %r" $ bSoloMode);
+        SendMessage(Sender, "%w  Default Spectator Slots - %b" $ iOriginalSpectators);
+        SendMessage(Sender, "%w  Current Spectator Slots - %b" $ KFGT.MaxSpectators);
+        SendMessage(Sender, lineSeparator);
         return;
     }
 
