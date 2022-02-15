@@ -48,11 +48,11 @@ auto state waitForPlayers
         if (KFGT.IsInState('PendingMatch'))
         {
             // if no real players, add nothing
-            if (RealPlayers() == 0)
+            if (intRealPlayers() == 0)
                 KFGT.NumPlayers = 0;
             // if any player join, add all fakes
             else
-                KFGT.NumPlayers = nFakes + RealPlayers();
+                KFGT.NumPlayers = nFakes + intRealPlayers();
         }
         // break this and go to global state
         else
@@ -77,14 +77,14 @@ function Timer()
 
     if (KFGT.IsInState('MatchInProgress'))
     {
-        KFGT.NumPlayers = nFakes + RealPlayers();
+        KFGT.NumPlayers = nFakes + intRealPlayers();
         return;
     }
 
     // do this to make map voting less painfull and instant after we wipe
     else if (KFGT.IsInState('MatchOver'))
     {
-        KFGT.NumPlayers = RealPlayers();
+        KFGT.NumPlayers = intRealPlayers();
     }
 }
 
@@ -105,7 +105,7 @@ function AdjustPlayerSlots()
 
 
 // count non-spectator players
-final private function int RealPlayers()
+final private function int intRealPlayers()
 {
     local Controller c;
     local int realPlayersCount;
@@ -119,7 +119,7 @@ final private function int RealPlayers()
 
 
 // count currently alive players
-final private function int AlivePlayersAmount()
+final private function int intAlivePlayers()
 {
     local Controller c;
     local int alivePlayersCount;
@@ -138,10 +138,25 @@ function bool CheckReplacement(Actor Other, out byte bSuperRelevant)
     local KFMonster monster;
     local int alivePlayersCount;
 
-    monster = KFMonster(Other);
-    if (monster != none)
-    {
-        alivePlayersCount = AlivePlayersAmount();
+    // if (KFMonster(Other) != none)
+    // {
+    //     monster = KFMonster(Other);
+    //     newHp= monster.Health / monster.NumPlayersHealthModifer() * hpScale(monster.PlayerCountHealthScale);
+    //     newHeadHp= monster.HeadHealth / monster.NumPlayersHeadHealthModifer() * hpScale(monster.PlayerNumHeadHealthScale);
+    //     if (newHp > monster.Health)
+    //     {
+    //         monster.Health= newHp;
+    //         monster.HealthMax= newHp;
+    //         monster.HeadHealth= newHeadHp;
+    //         if(Level.Game.NumPlayers == 1 && minNumPlayers > 1) {
+    //             monster.MeleeDamage/= 0.75;
+    //         }
+    //     }
+    // }
+    return super.CheckReplacement(Other, bSuperRelevant);
+
+
+        alivePlayersCount = intAlivePlayers();
         if (alivePlayersCount < minNumPlayers)
         {
             monster.Health *= hpScale(monster.PlayerCountHealthScale) / monster.NumPlayersHealthModifer();
@@ -153,8 +168,6 @@ function bool CheckReplacement(Actor Other, out byte bSuperRelevant)
             monster.SpinDamConst /= 0.75;
             monster.SpinDamRand /= 0.75;
         }
-    }
-    return true;
 }
 
 
@@ -262,7 +275,7 @@ function Mutate(string MutateString, PlayerController Sender)
         {
             nFakes = Int(mod);
             if (bLockOn)
-                KFGT.MaxPlayers = RealPlayers() + nFakes;
+                KFGT.MaxPlayers = intRealPlayers() + nFakes;
             BroadcastText("%wFaked players - %b"$Int(mod), true);
         }
         return;
@@ -303,7 +316,7 @@ function Mutate(string MutateString, PlayerController Sender)
     {
         if (mod ~= "ON")
         {
-            KFGT.MaxPlayers = RealPlayers() + nFakes;
+            KFGT.MaxPlayers = intRealPlayers() + nFakes;
             bLockOn = true;
             BroadcastText("%wServer is %rLocked!", true);
         }
@@ -420,7 +433,7 @@ function Mutate(string MutateString, PlayerController Sender)
     else if (command ~= "STATUS")
     {
         SendMessage(Sender, "%rFaked Plus Mutator");
-        SendMessage(Sender, "%wFakes - %b"$nFakes$"%w, Real Players - %b"$RealPlayers()$"%w, Player Slots - %b"$KFGT.MaxPlayers);
+        SendMessage(Sender, "%wFakes - %b"$nFakes$"%w, Real Players - %b"$intRealPlayers()$"%w, Player Slots - %b"$KFGT.MaxPlayers);
         SendMessage(Sender, "%wZeds Minimal Health - %b"$minNumPlayers);
         SendMessage(Sender, "%wSlomo disabled - %r"$bNoDrama$"%w, AdminOnly - %r"$bAdminOnly$"%w, SoloMode - %r"$bSoloMode);
         SendMessage(Sender, "%wDefault Spectator Slots - %b"$iOriginalSpectators$"%w, Current Spectator Slots - %b"$KFGT.MaxSpectators);
