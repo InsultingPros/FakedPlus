@@ -1,0 +1,71 @@
+This mutator is an advanced version of Faked Players. Allows to change fakes, zeds health, switch slomo on-off and many other things directly from the game.
+
+Custom mode ('Chosen amount of fakes') allows a bit more than others. You can reserve player slots and use more than 5 fakes.
+
+[h2][b]Whitelist Status[/b][/h2]
+[list]
+[*] Dedicated server: all clients will level up, get achievs.
+[*] Listened server: except the host itself, all clients will level up, get achievs.
+[*] Solo: greylisted. No regrets.
+[*] Using Custom mod with tons of fakes will disable level up, achievs.
+[/list]
+
+[h2][b]Console Commands[/b][/h2]
+Commands are named pretty obvious so I'm listing them here for acquaintance, without many detailes.
+If you want to find out what cmd does what - type [b]'mutate HELP'[/b] and [b]'mutate HELP <cmdname>'[/b] during a game. If you want to check what variables are currently used type [b]'mutate STATUS'[/b].
+
+[h2][b]Commands with ON-OFF switch:[/b][/h2]
+[list]
+[*] LOCK
+[*] SPEC, SPECS, SPECTATOR, SPECTATORS
+[*] DRAMA, SLOMO
+[*] ADMINONLY, ADMIN
+[*] SOLO
+[/list]
+
+[h2][b]Commands with Int values:[/b][/h2]
+[list]
+[*] FAKED, FAKE, FAKES
+[*] PLAYER, PLAYERS, SLOT
+[*] HEALTH, HP
+[*] SPEC, SPECS, SPECTATOR, SPECTATORS
+[*] ReservedSlots, RS
+[*] ConfigFakes, CF
+[/list]
+
+[h2][b]Commands that work as is:[/b][/h2]
+[list]
+[*] HELP, HLP, HALP
+[*] STATUS
+[*] SKIP, SKP
+[*] SAVE
+[*] CREDITS
+[/list]
+
+[h2][b]Server Realated Stuff[/b][/h2]
+You can make different votings for your server since since Faked Plus is a 6-in-1.
+[b]Config:[/b] https://github.com/InsultingPros/FakedPlus/blob/main/Configs/FakedPlus.ini
+[code]
+FakedPlus.Faked_1
+FakedPlus.Faked_2
+FakedPlus.Faked_3
+FakedPlus.Faked_4
+FakedPlus.Faked_5
+FakedPlus.Custom
+[/code]
+
+[h3][b]Compatibility[/b][/h3]
+Don't use Faked Plus with:
+[list]
+[*] [url=http://steamcommunity.com/sharedfiles/filedetails/?id=111824128]Specimen HP Config[/url] or any mutator that changes zeds health.
+[*] any other faked player mutators at same time. Obviously.
+[*] ScrN Balance.
+[*] any other mod that relies on modified player calculation and fakes system.
+[/list]
+
+[h2][b]Credits[/b][/h2]
+Thanks to [url=http://steamcommunity.com/id/a1eat0r]a1eat0r[/url], [url=http://steamcommunity.com/id/lol_what_is_it]bIbIbI(rus)[/url], [url=http://steamcommunity.com/id/imascaryghost]scary ghost[/url], [url=http://steamcommunity.com/id/scrn-poosh]Poosh[/url].
+And a huge cookie to [url=http://steamcommunity.com/id/dkanus]dkanus[/url] for assistance. Check his [url=http://steamcommunity.com/groups/ScrNBalance/discussions/6/353916184341908932/]TrainingPack[/url] if you look for more advanced training mutator.
+
+[h2][b]Download Link for Lazy Admins:[/b][/h2]
+[url=https://github.com/InsultingPros/FakedPlus/releases]GitHub[/url]
